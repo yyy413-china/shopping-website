@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 商家Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.SupplierMapper">
+
+    <resultMap id="BaseResultMap" type="com.egou.domain.Supplier">
+        <id column="id" property="id"/>
+        <result column="userid" property="userid"/>
+        <result column="sname" property="sname"/>
+        <result column="sphone" property="sphone"/>
+        <result column="saddress" property="saddress"/>
+        <result column="sstatus" property="sstatus"/>
+        <result column="createtime" property="createtime"/>
+    </resultMap>
+
+    <!-- 根据用户ID查询商家 -->
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT * FROM supplier WHERE userid = #{userid}
+    </select>
+
+    <!-- 根据ID查询商家 -->
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM supplier WHERE id = #{id}
+    </select>
+
+    <!-- 新增商家 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO supplier (userid, sname, sphone, saddress, sstatus)
+        VALUES (#{userid}, #{sname}, #{sphone}, #{saddress}, #{sstatus})
+    </insert>
+
+</mapper>

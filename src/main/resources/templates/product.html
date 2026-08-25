@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!-- 商品详情页：展示商品完整信息、支持直接购买/加入购物车/收藏/评价 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${commodity.cname} + ' - E购商城'">商品详情 - E购商城</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        .product-image { width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; }
+        .product-title { font-size: 28px; font-weight: bold; margin: 20px 0; }
+        .product-price { color: #e74c3c; font-size: 32px; font-weight: bold; }
+        .btn-action { padding: 12px 40px; font-size: 18px; margin-right: 15px; }
+        .btn-favorite { background-color: #f39c12; color: white; border: none; }
+        .btn-favorite.active { background-color: #e67e22; }
+        .product-info-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .info-label { color: #666; font-weight: bold; }
+        .stock-badge { background: #27ae60; color: white; padding: 4px 12px; border-radius: 4px; }
+        .rating-stars { color: #f39c12; font-size: 18px; }
+        .review-card { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .review-user { font-weight: bold; color: #333; }
+        .review-time { color: #999; font-size: 12px; }
+        .review-content { color: #555; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/index">E购商城</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link" href="/index">首页</a></li>
+                    <li class="nav-item" th:if="${user != null and user.role == 0}">
+                        <a class="nav-link" href="/cart">购物车</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item" th:if="${user == null}">
+                        <a class="nav-link" href="#" onclick="showLoginModal(); return false;">登录</a>
+                    </li>
+                    <li class="nav-item" th:if="${user != null}">
+                        <a class="nav-link" href="/profile" th:text="'欢迎，' + ${user.name}"></a>
+                    </li>
+                    <li class="nav-item" th:if="${user != null}">
+                        <a class="nav-link" href="/logout">注销</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- 左侧商品图片 -->
+            <div class="col-md-6">
+                <img th:if="${commodity.ipath != null}" th:src="${commodity.ipath}" class="product-image" alt="商品图片">
+                <img th:if="${commodity.ipath == null}" src="/images/no-image.svg" class="product-image" alt="暂无图片">
+            </div>
+
+            <!-- 右侧商品信息 -->
+            <div class="col-md-6">
+                <h1 class="product-title" th:text="${commodity.cname}">商品名称</h1>
+                
+                <div class="mb-3">
+                    <span class="product-price">￥<span th:text="${commodity.cprice}">0.00</span></span>
+                </div>
+
+                <div class="product-info-box">
+                    <div class="row mb-2">
+                        <div class="col-3 info-label">分类：</div>
+                        <div class="col-9" th:text="${commodity.categoryName}">分类名称</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-3 info-label">商家：</div>
+                        <div class="col-9" th:text="${commodity.supplierName}">商家名称</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-3 info-label">库存：</div>
+                        <div class="col-9">
+                            <span class="stock-badge" th:text="'剩余 ' + ${commodity.cnum} + ' 件'">库存</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3 info-label">描述：</div>
+                        <div class="col-9" th:text="${commodity.cdesc}">商品描述</div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="mt-4">
+                    <button class="btn btn-danger btn-action" onclick="buyNow()">立即购买</button>
+                    <button class="btn btn-primary btn-action" onclick="addToCart()">加入购物车</button>
+                    <button class="btn btn-favorite btn-action" 
+                            th:classappend="${isFavorite} ? 'active'"
+                            onclick="toggleFavorite()"
+                            th:id="'favBtn'">
+                        <span th:if="${isFavorite}">已收藏</span>
+                        <span th:unless="${isFavorite}">收藏</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 商品评价区域 -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h4 class="mb-4">商品评价 
+                    <small class="text-muted" th:text="'(' + ${reviewCount} + '条评价)'">(0条评价)</small>
+                    <span class="rating-stars ml-3" th:if="${avgRating > 0}">
+                        平均评分：<span th:text="${#numbers.formatDecimal(avgRating, 1, 1)}">0.0</span> 星
+                    </span>
+                </h4>
+
+                <!-- 评价表单（仅买家且未评价时显示） -->
+                <div th:if="${user != null and user.role == 0 and !hasReviewed}" class="card mb-4">
+                    <div class="card-header">发表评价</div>
+                    <div class="card-body">
+                        <form id="reviewForm">
+                            <div class="form-group">
+                                <label>评分</label>
+                                <select class="form-control" id="reviewRating" style="width: 200px;">
+                                    <option value="5">★★★★★ 非常满意</option>
+                                    <option value="4">★★★★☆ 满意</option>
+                                    <option value="3">★★★☆☆ 一般</option>
+                                    <option value="2">★★☆☆☆ 不满意</option>
+                                    <option value="1">★☆☆☆☆ 非常不满意</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>评价内容</label>
+                                <textarea class="form-control" id="reviewContent" rows="4" placeholder="请分享您对该商品的使用体验..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">提交评价</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 已评价提示 -->
+                <div th:if="${user != null and user.role == 0 and hasReviewed}" class="alert alert-success">
+                    您已评价过该商品
+                </div>
+
+                <!-- 未登录提示 -->
+                <div th:if="${user == null}" class="alert alert-info">
+                    请<a href="#" onclick="showLoginModal(); return false;">登录</a>后发表评价
+                </div>
+
+                <!-- 评价列表 -->
+                <div th:if="${reviews.size() > 0}">
+                    <div th:each="review : ${reviews}" class="review-card">
+                        <div class="review-header">
+                            <div>
+                                <span class="review-user" th:text="${review.userName}">用户名</span>
+                                <span class="rating-stars ml-3">
+                                    <th:block th:each="i : ${#numbers.sequence(1, review.rating)}">★</th:block>
+                                    <th:block th:each="i : ${#numbers.sequence(review.rating + 1, 5)}" style="color:#ddd;">☆</th:block>
+                                </span>
+                            </div>
+                            <span class="review-time" th:text="${#dates.format(review.createtime, 'yyyy-MM-dd HH:mm')}">时间</span>
+                        </div>
+                        <div class="review-content" th:text="${review.content}">评价内容</div>
+                    </div>
+                </div>
+
+                <!-- 无评价提示 -->
+                <div th:if="${reviews.size() == 0}" class="text-center text-muted py-4">
+                    暂无评价，快来发表第一条评价吧！
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录弹窗模态框 -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">用户登录</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label>账号</label>
+                            <input type="text" class="form-control" id="loginAccount" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">登录</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script>
+        // 商品ID
+        var commodityId = [[${commodity.id}]];
+        var isLoggedIn = [[${user != null}]];
+
+        // 显示登录弹窗
+        function showLoginModal() {
+            $('#loginModal').modal('show');
+        }
+
+        // 检查登录状态，未登录则弹窗
+        function checkLogin() {
+            if (!isLoggedIn) {
+                showLoginModal();
+                return false;
+            }
+            return true;
+        }
+
+        // 登录表单提交
+        $('#loginForm').submit(function(e) {
+            e.preventDefault();
+            var account = $('#loginAccount').val();
+            var password = $('#loginPassword').val();
+            $.post('/check', { account: account, password: password }, function(res) {
+                if (res.code === 200) {
+                    alert(res.msg);
+                    location.reload(); // 刷新页面
+                } else {
+                    alert(res.msg);
+                }
+            });
+        });
+
+        // 立即购买
+        function buyNow() {
+            if (!checkLogin()) return;
+            $.post('/buyNow', { commodityid: commodityId, num: 1 }, function(res) {
+                if (res.code === 200) {
+                    alert(res.msg);
+                    window.location.href = '/cart'; // 跳转购物车结算
+                } else {
+                    alert(res.msg);
+                }
+            });
+        }
+
+        // 加入购物车
+        function addToCart() {
+            if (!checkLogin()) return;
+            $.get('/addtocart', { commodityid: commodityId }, function(res) {
+                alert(res.msg);
+            });
+        }
+
+        // 收藏/取消收藏
+        function toggleFavorite() {
+            if (!checkLogin()) return;
+            $.post('/toggleFavorite', { commodityid: commodityId }, function(res) {
+                if (res.code === 200) {
+                    var btn = $('#favBtn');
+                    if (res.data.isFavorite) {
+                        btn.addClass('active');
+                        btn.html('已收藏');
+                    } else {
+                        btn.removeClass('active');
+                        btn.html('收藏');
+                    }
+                    alert(res.data.msg);
+                } else {
+                    alert(res.msg);
+                }
+            });
+        }
+
+        // 提交评价
+        $('#reviewForm').submit(function(e) {
+            e.preventDefault();
+            if (!checkLogin()) return;
+            var content = $('#reviewContent').val().trim();
+            var rating = $('#reviewRating').val();
+            if (!content) {
+                alert('请输入评价内容');
+                return;
+            }
+            $.post('/addReview', { commodityid: commodityId, content: content, rating: rating }, function(res) {
+                if (res.code === 200) {
+                    alert(res.msg);
+                    location.reload(); // 刷新页面显示新评价
+                } else {
+                    alert(res.msg);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

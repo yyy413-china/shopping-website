@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 商品Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.CommodityMapper">
+
+    <resultMap id="BaseResultMap" type="com.egou.domain.Commodity">
+        <id column="id" property="id"/>
+        <result column="supplierid" property="supplierid"/>
+        <result column="categoryid" property="categoryid"/>
+        <result column="cname" property="cname"/>
+        <result column="cprice" property="cprice"/>
+        <result column="cnum" property="cnum"/>
+        <result column="cdesc" property="cdesc"/>
+        <result column="cstatus" property="cstatus"/>
+        <result column="createtime" property="createtime"/>
+        <result column="ipath" property="ipath"/>
+        <result column="categoryName" property="categoryName"/>
+        <result column="supplierName" property="supplierName"/>
+    </resultMap>
+
+    <!-- 查询全部在售商品（联表查询分类名称和图片路径） -->
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT c.*, ca.cname AS categoryName, s.sname AS supplierName, i.ipath
+        FROM commodity c
+        LEFT JOIN category ca ON c.categoryid = ca.id
+        LEFT JOIN supplier s ON c.supplierid = s.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE c.cstatus = 1
+        ORDER BY c.createtime DESC
+    </select>
+
+    <!-- 根据分类ID查询在售商品 -->
+    <select id="findByCategoryId" resultMap="BaseResultMap">
+        SELECT c.*, ca.cname AS categoryName, s.sname AS supplierName, i.ipath
+        FROM commodity c
+        LEFT JOIN category ca ON c.categoryid = ca.id
+        LEFT JOIN supplier s ON c.supplierid = s.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE c.cstatus = 1 AND c.categoryid = #{categoryid}
+        ORDER BY c.createtime DESC
+    </select>
+
+    <!-- 根据ID查询商品 -->
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT c.*, ca.cname AS categoryName, s.sname AS supplierName, i.ipath
+        FROM commodity c
+        LEFT JOIN category ca ON c.categoryid = ca.id
+        LEFT JOIN supplier s ON c.supplierid = s.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE c.id = #{id}
+    </select>
+
+    <!-- 根据商家ID查询商品 -->
+    <select id="findBySupplierId" resultMap="BaseResultMap">
+        SELECT c.*, ca.cname AS categoryName, i.ipath
+        FROM commodity c
+        LEFT JOIN category ca ON c.categoryid = ca.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE c.supplierid = #{supplierid}
+        ORDER BY c.createtime DESC
+    </select>
+
+    <!-- 新增商品 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO commodity (supplierid, categoryid, cname, cprice, cnum, cdesc, cstatus)
+        VALUES (#{supplierid}, #{categoryid}, #{cname}, #{cprice}, #{cnum}, #{cdesc}, #{cstatus})
+    </insert>
+
+    <!-- 修改商品 -->
+    <update id="update">
+        UPDATE commodity
+        SET categoryid = #{categoryid}, cname = #{cname}, cprice = #{cprice},
+            cnum = #{cnum}, cdesc = #{cdesc}, cstatus = #{cstatus}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除商品 -->
+    <delete id="deleteById">
+        DELETE FROM commodity WHERE id = #{id}
+    </delete>
+
+    <!-- 修改商品状态 -->
+    <update id="updateStatus">
+        UPDATE commodity SET cstatus = #{cstatus} WHERE id = #{id}
+    </update>
+
+    <!-- 扣减商品库存 -->
+    <update id="reduceStock">
+        UPDATE commodity SET cnum = cnum - #{num} WHERE id = #{id} AND cnum >= #{num}
+    </update>
+
+    <!-- 根据关键词搜索商品 -->
+    <select id="searchByKeyword" resultMap="BaseResultMap">
+        SELECT c.*, ca.cname AS categoryName, s.sname AS supplierName, i.ipath
+        FROM commodity c
+        LEFT JOIN category ca ON c.categoryid = ca.id
+        LEFT JOIN supplier s ON c.supplierid = s.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE c.cstatus = 1 AND c.cname LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY c.createtime DESC
+    </select>
+
+</mapper>

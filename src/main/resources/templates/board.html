@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!-- E购商城留言板页面：买家可发送留言，商家可查看所有买家留言 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E购商城 - 留言板</title>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+    <!-- 顶部导航栏：根据角色显示不同导航项 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/index" style="font-weight:bold;color:#e74c3c!important;font-size:24px;">E购商城</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link" href="/index">首页</a></li>
+                    <!-- 买家导航：购物车 -->
+                    <li class="nav-item" th:if="${user != null and user.role == 0}"><a class="nav-link" href="/cart">购物车</a></li>
+                    <!-- 商家导航：商品管理 -->
+                    <li class="nav-item" th:if="${user != null and user.role == 1}"><a class="nav-link" href="/com">商品管理</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="/board">买家留言</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <!-- 显示当前登录用户欢迎语 -->
+                    <li class="nav-item"><a class="nav-link" href="/profile" style="color:#27ae60;font-weight:bold;" th:text="${user != null ? '欢迎，' + user.name : ''}"></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">注销</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h4>留言板</h4>
+
+        <!-- 买家：发送留言区域 -->
+        <div class="card mt-3" th:if="${user != null and user.role == 0}">
+            <div class="card-header">发送留言</div>
+            <div class="card-body">
+                <!-- 留言内容输入框 -->
+                <div class="form-group">
+                    <textarea class="form-control" id="msgContent" rows="3" placeholder="请输入留言内容"></textarea>
+                </div>
+                <!-- 发送留言按钮 -->
+                <button class="btn btn-danger" onclick="sendMsg()">发送留言</button>
+            </div>
+        </div>
+
+        <!-- 商家：查看留言列表 + 商品评价区域 -->
+        <div class="card mt-3" th:if="${user != null and user.role == 1}">
+            <div class="card-header">买家留言列表</div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr><th>发送者</th><th>留言内容</th><th>发送时间</th></tr>
+                    </thead>
+                    <tbody>
+                        <!-- 遍历留言列表 -->
+                        <tr th:each="msg : ${messages}">
+                            <td th:text="${msg.senderName}"></td>
+                            <td th:text="${msg.content}"></td>
+                            <!-- 格式化显示发送时间 -->
+                            <td th:text="${#dates.format(msg.sendTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- 无留言时的提示 -->
+                <p th:if="${messages == null or messages.isEmpty()}" class="text-muted">暂无留言</p>
+            </div>
+        </div>
+
+        <!-- 商家：商品评价列表 -->
+        <div class="card mt-4" th:if="${user != null and user.role == 1}">
+            <div class="card-header" style="background:#f093fb;color:white;font-weight:bold;">商品评价反馈</div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-dark" style="background:#f5576c;">
+                        <tr><th>评价人</th><th>商品</th><th>评分</th><th>评价内容</th><th>评价时间</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="review : ${reviews}">
+                            <td th:text="${review.userName}">评价人</td>
+                            <td>
+                                <a th:href="@{/product/{id}(id=${review.commodityid})}" th:text="${review.commodityName}" style="color:#e74c3c;">商品名</a>
+                            </td>
+                            <td>
+                                <span style="color:#f39c12;">
+                                    <th:block th:each="i : ${#numbers.sequence(1, review.rating)}">★</th:block>
+                                    <th:block th:each="i : ${#numbers.sequence(review.rating + 1, 5)}" style="color:#ddd;">☆</th:block>
+                                </span>
+                            </td>
+                            <td th:text="${review.content}">评价内容</td>
+                            <td th:text="${#dates.format(review.createtime, 'yyyy-MM-dd HH:mm')}">时间</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p th:if="${reviews == null or reviews.isEmpty()}" class="text-muted">暂无商品评价</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部版权信息 -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p class="mb-0">&copy; 2024 E购商城 版权所有</p>
+    </footer>
+
+    <!-- 引入jQuery -->
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script>
+        // 发送留言（买家=消息生产者）：校验非空后发送POST请求
+        function sendMsg() {
+            var content = $('#msgContent').val().trim();
+            if (!content) { alert('请输入留言内容'); return; }
+            $.post('/sendMsg', { content: content }, function(res) {
+                alert(res.msg);
+                if (res.code === 200) { $('#msgContent').val(''); }
+            });
+        }
+    </script>
+</body>
+</html>

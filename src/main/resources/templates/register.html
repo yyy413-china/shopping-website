@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!-- E购商城注册页面：提供用户注册功能，支持买家和商家两种角色 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E购商城 - 注册</title>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        /* 注册容器居中、带边框和阴影 */
+        .register-container { max-width: 500px; margin: 50px auto; padding: 30px; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        /* 注册标题红色居中 */
+        .register-container h2 { text-align: center; margin-bottom: 30px; color: #e74c3c; }
+        /* 注册按钮红色全宽 */
+        .btn-register { background-color: #e74c3c; border-color: #e74c3c; width: 100%; }
+        /* 注册按钮悬停深红色 */
+        .btn-register:hover { background-color: #c0392b; }
+    </style>
+</head>
+<body>
+    <!-- 注册表单区域 -->
+    <div class="register-container">
+        <h2>E购商城 - 注册</h2>
+        <form id="registerForm">
+            <!-- 账号输入框 -->
+            <div class="form-group">
+                <label>账号</label>
+                <input type="text" class="form-control" id="account" name="account" placeholder="请输入账号" required>
+            </div>
+            <!-- 密码输入框 -->
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+            </div>
+            <!-- 姓名输入框 -->
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="请输入姓名" required>
+            </div>
+            <!-- 性别选择 -->
+            <div class="form-group">
+                <label>性别</label>
+                <select class="form-control" id="sex" name="sex">
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                </select>
+            </div>
+            <!-- 身份证号输入框 -->
+            <div class="form-group">
+                <label>身份证号</label>
+                <input type="text" class="form-control" id="idcard" name="idcard" placeholder="请输入身份证号">
+            </div>
+            <!-- 手机号输入框 -->
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="text" class="form-control" id="phone" name="phone" placeholder="请输入手机号">
+            </div>
+            <!-- 注册角色选择：普通买家或商家 -->
+            <div class="form-group">
+                <label>注册角色</label>
+                <select class="form-control" id="role" name="role">
+                    <option value="0">普通买家</option>
+                    <option value="1">商家</option>
+                </select>
+            </div>
+            <!-- 注册按钮 -->
+            <button type="button" class="btn btn-primary btn-register mt-3" onclick="doRegister()">注册</button>
+            <!-- 跳转登录链接 -->
+            <div class="text-center mt-3">
+                <a href="/login">已有账号？去登录</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- 引入jQuery -->
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script>
+        // 注册提交：前端校验必填项后，序列化表单发送POST请求
+        function doRegister() {
+            var account = $('#account').val().trim();
+            var password = $('#password').val().trim();
+            var name = $('#name').val().trim();
+            // 前端非空校验
+            if (!account) { alert('请输入账号'); return; }
+            if (!password) { alert('请输入密码'); return; }
+            if (!name) { alert('请输入姓名'); return; }
+            // 密码长度校验
+            if (password.length < 3) { alert('密码长度不能少于3位'); return; }
+            // 序列化表单数据并提交注册请求，成功后跳转登录页
+            $.post('/enrol', $('#registerForm').serialize(), function(res) {
+                alert(res.msg);
+                if (res.code === 200) {
+                    window.location.href = '/login';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

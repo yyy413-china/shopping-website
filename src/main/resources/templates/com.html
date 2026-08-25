@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<!-- E购商城商家商品管理页面：商家可新增商品、查看商品列表、停售/在售/删除商品 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E购商城 - 商品管理</title>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        /* 商品列表中缩略图样式 */
+        .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; }
+        /* 操作按钮间距 */
+        .btn-action { margin: 2px; }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏：商家专用导航 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/index" style="font-weight:bold;color:#e74c3c!important;font-size:24px;">E购商城</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link" href="/index">首页</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="/com">商品管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/board">买家留言</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <!-- 显示当前登录商家欢迎语 -->
+                    <li class="nav-item"><a class="nav-link" href="/profile" style="color:#27ae60;font-weight:bold;" th:text="${user != null ? '欢迎，' + user.name : ''}"></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">注销</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 显示当前商家名称 -->
+        <h4>商品管理 - <span th:text="${supplier != null ? supplier.sname : ''}"></span></h4>
+
+        <!-- 新增商品表单：支持填写商品信息并上传图片 -->
+        <div class="card mt-3">
+            <div class="card-header">新增商品</div>
+            <div class="card-body">
+                <form id="addForm" enctype="multipart/form-data">
+                    <div class="form-row">
+                        <!-- 商品名称 -->
+                        <div class="form-group col-md-3">
+                            <label>商品名称</label>
+                            <input type="text" class="form-control" id="cname" name="cname" placeholder="商品名称" required>
+                        </div>
+                        <!-- 商品价格 -->
+                        <div class="form-group col-md-2">
+                            <label>价格</label>
+                            <input type="number" step="0.01" class="form-control" id="cprice" name="cprice" placeholder="价格" required>
+                        </div>
+                        <!-- 商品库存 -->
+                        <div class="form-group col-md-2">
+                            <label>库存</label>
+                            <input type="number" class="form-control" id="cnum" name="cnum" placeholder="库存" required>
+                        </div>
+                        <!-- 商品分类选择 -->
+                        <div class="form-group col-md-2">
+                            <label>分类</label>
+                            <select class="form-control" id="categoryid" name="categoryid">
+                                <option value="1">数码电子</option>
+                                <option value="2">服装鞋帽</option>
+                                <option value="3">食品饮料</option>
+                                <option value="4">家居日用</option>
+                                <option value="5">图书文具</option>
+                            </select>
+                        </div>
+                        <!-- 商品图片上传 -->
+                        <div class="form-group col-md-3">
+                            <label>商品图片</label>
+                            <input type="file" class="form-control-file" id="file" name="file" accept=".jpg,.jpeg,.png,.gif">
+                        </div>
+                    </div>
+                    <!-- 商品描述 -->
+                    <div class="form-group">
+                        <label>商品描述</label>
+                        <input type="text" class="form-control" id="cdesc" name="cdesc" placeholder="商品描述">
+                    </div>
+                    <!-- 新增商品按钮 -->
+                    <button type="button" class="btn btn-danger" onclick="addCommodity()">新增商品</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 商品列表：展示商家所有商品，支持停售/在售/删除操作 -->
+        <div class="card mt-4">
+            <div class="card-header">商品列表</div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>ID</th><th>图片</th><th>商品名称</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 遍历商品列表 -->
+                        <tr th:each="com : ${commodities}">
+                            <td th:text="${com.id}"></td>
+                            <!-- 商品缩略图 -->
+                            <td><img class="product-img" th:if="${com.ipath != null}" th:src="${com.ipath}" alt="商品图"></td>
+                            <td th:text="${com.cname}"></td>
+                            <td th:text="${com.cprice}"></td>
+                            <td th:text="${com.cnum}"></td>
+                            <!-- 商品状态标签：在售/停售 -->
+                            <td>
+                                <span class="badge badge-success" th:if="${com.cstatus == 1}">在售</span>
+                                <span class="badge badge-secondary" th:if="${com.cstatus == 0}">停售</span>
+                            </td>
+                            <!-- 操作按钮：停售/在售/删除 -->
+                            <td>
+                                <a class="btn btn-warning btn-sm btn-action" th:href="@{/show(id=${com.id}, op='stop')}" th:if="${com.cstatus == 1}">停售</a>
+                                <a class="btn btn-success btn-sm btn-action" th:href="@{/show(id=${com.id}, op='start')}" th:if="${com.cstatus == 0}">在售</a>
+                                <a class="btn btn-danger btn-sm btn-action" th:href="@{/show(id=${com.id}, op='delete')}" onclick="return confirm('确认删除？')">删除</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部版权信息 -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p class="mb-0">&copy; 2024 E购商城 版权所有</p>
+    </footer>
+
+    <!-- 引入jQuery -->
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script>
+        // 新增商品：校验必填项后，使用FormData提交表单（含文件上传）
+        function addCommodity() {
+            var cname = $('#cname').val().trim();
+            var cprice = $('#cprice').val().trim();
+            var cnum = $('#cnum').val().trim();
+            // 前端非空校验
+            if (!cname) { alert('请输入商品名称'); return; }
+            if (!cprice) { alert('请输入价格'); return; }
+            if (!cnum) { alert('请输入库存'); return; }
+            // 使用FormData封装表单数据，支持文件上传
+            var formData = new FormData($('#addForm')[0]);
+            $.ajax({
+                url: '/add',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    alert(res.msg);
+                    if (res.code === 200) { window.location.reload(); }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

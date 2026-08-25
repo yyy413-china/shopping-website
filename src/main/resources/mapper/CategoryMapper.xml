@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 商品分类Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.CategoryMapper">
+
+    <resultMap id="BaseResultMap" type="com.egou.domain.Category">
+        <id column="id" property="id"/>
+        <result column="cname" property="cname"/>
+        <result column="createtime" property="createtime"/>
+    </resultMap>
+
+    <!-- 查询全部分类 -->
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM category ORDER BY id
+    </select>
+
+</mapper>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 购物车Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.ShopcartMapper">
+
+    <resultMap id="BaseResultMap" type="com.egou.domain.Shopcart">
+        <id column="id" property="id"/>
+        <result column="userid" property="userid"/>
+        <result column="commodityid" property="commodityid"/>
+        <result column="cnum" property="cnum"/>
+        <result column="confirm" property="confirm"/>
+        <result column="orderid" property="orderid"/>
+        <result column="createtime" property="createtime"/>
+        <result column="commodityName" property="commodityName"/>
+        <result column="commodityPrice" property="commodityPrice"/>
+        <result column="imagePath" property="imagePath"/>
+        <result column="commodityNum" property="commodityNum"/>
+        <result column="orderNo" property="orderNo"/>
+    </resultMap>
+
+    <!-- 根据用户ID查询未结算购物车（联表查询商品信息和图片） -->
+    <select id="findUnpaidByUserId" resultMap="BaseResultMap">
+        SELECT sc.*, co.cname AS commodityName, co.cprice AS commodityPrice,
+               co.cnum AS commodityNum, i.ipath AS imagePath
+        FROM shopcart sc
+        LEFT JOIN commodity co ON sc.commodityid = co.id
+        LEFT JOIN image i ON co.id = i.commodityid
+        WHERE sc.userid = #{userid} AND sc.confirm = 0
+        ORDER BY sc.createtime DESC
+    </select>
+
+    <!-- 根据用户ID查询已结算订单（联表查询商品、图片和订单信息） -->
+    <select id="findPaidByUserId" resultMap="BaseResultMap">
+        SELECT sc.*, co.cname AS commodityName, co.cprice AS commodityPrice,
+               i.ipath AS imagePath, o.orderno AS orderNo
+        FROM shopcart sc
+        LEFT JOIN commodity co ON sc.commodityid = co.id
+        LEFT JOIN image i ON co.id = i.commodityid
+        LEFT JOIN `order` o ON sc.orderid = o.id
+        WHERE sc.userid = #{userid} AND sc.confirm = 1
+        ORDER BY sc.createtime DESC
+    </select>
+
+    <!-- 查询用户购物车中是否已有该商品 -->
+    <select id="findByUserAndCommodity" resultMap="BaseResultMap">
+        SELECT * FROM shopcart WHERE userid = #{userid} AND commodityid = #{commodityid} AND confirm = 0
+    </select>
+
+    <!-- 新增购物车记录 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO shopcart (userid, commodityid, cnum, confirm)
+        VALUES (#{userid}, #{commodityid}, #{cnum}, #{confirm})
+    </insert>
+
+    <!-- 修改购物车商品数量 -->
+    <update id="updateNum">
+        UPDATE shopcart SET cnum = #{cnum} WHERE id = #{id}
+    </update>
+
+    <!-- 删除购物车记录 -->
+    <delete id="deleteById">
+        DELETE FROM shopcart WHERE id = #{id}
+    </delete>
+
+    <!-- 更新购物车结算状态 -->
+    <update id="updateConfirm">
+        UPDATE shopcart SET confirm = 1, orderid = #{orderid} WHERE id = #{id}
+    </update>
+
+    <!-- 统计商家已结算订单的总销售额 -->
+    <select id="sumSalesBySupplierId" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(sc.cnum * co.cprice), 0)
+        FROM shopcart sc
+        INNER JOIN commodity co ON sc.commodityid = co.id
+        WHERE co.supplierid = #{supplierid} AND sc.confirm = 1
+    </select>
+
+    <!-- 统计商家已结算订单的总销量 -->
+    <select id="sumSalesNumBySupplierId" resultType="int">
+        SELECT IFNULL(SUM(sc.cnum), 0)
+        FROM shopcart sc
+        INNER JOIN commodity co ON sc.commodityid = co.id
+        WHERE co.supplierid = #{supplierid} AND sc.confirm = 1
+    </select>
+
+    <!-- 统计商家已结算订单数 -->
+    <select id="countOrdersBySupplierId" resultType="int">
+        SELECT COUNT(DISTINCT sc.orderid)
+        FROM shopcart sc
+        INNER JOIN commodity co ON sc.commodityid = co.id
+        WHERE co.supplierid = #{supplierid} AND sc.confirm = 1 AND sc.orderid IS NOT NULL
+    </select>
+
+    <!-- 查询商家最近售出的商品列表 -->
+    <select id="findRecentSalesBySupplierId" resultMap="BaseResultMap">
+        SELECT sc.*, co.cname AS commodityName, co.cprice AS commodityPrice,
+               co.cnum AS commodityNum, i.ipath AS imagePath, o.orderno AS orderNo
+        FROM shopcart sc
+        INNER JOIN commodity co ON sc.commodityid = co.id
+        LEFT JOIN image i ON co.id = i.commodityid
+        LEFT JOIN `order` o ON sc.orderid = o.id
+        WHERE co.supplierid = #{supplierid} AND sc.confirm = 1
+        ORDER BY sc.createtime DESC
+        LIMIT 10
+    </select>
+
+    <!-- 查询商家所有已售出的商品列表（用于明细页） -->
+    <select id="findAllSalesBySupplierId" resultMap="BaseResultMap">
+        SELECT sc.*, co.cname AS commodityName, co.cprice AS commodityPrice,
+               co.cnum AS commodityNum, i.ipath AS imagePath, o.orderno AS orderNo
+        FROM shopcart sc
+        INNER JOIN commodity co ON sc.commodityid = co.id
+        LEFT JOIN image i ON co.id = i.commodityid
+        LEFT JOIN `order` o ON sc.orderid = o.id
+        WHERE co.supplierid = #{supplierid} AND sc.confirm = 1
+        ORDER BY sc.createtime DESC
+    </select>
+
+</mapper>

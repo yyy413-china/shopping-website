@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 商品图片Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.ImageMapper">
+
+    <resultMap id="BaseResultMap" type="com.egou.domain.Image">
+        <id column="id" property="id"/>
+        <result column="commodityid" property="commodityid"/>
+        <result column="iname" property="iname"/>
+        <result column="ipath" property="ipath"/>
+        <result column="createtime" property="createtime"/>
+    </resultMap>
+
+    <!-- 根据商品ID查询图片 -->
+    <select id="findByCommodityId" resultMap="BaseResultMap">
+        SELECT * FROM image WHERE commodityid = #{commodityid}
+    </select>
+
+    <!-- 新增图片 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO image (commodityid, iname, ipath)
+        VALUES (#{commodityid}, #{iname}, #{ipath})
+    </insert>
+
+    <!-- 根据商品ID删除图片 -->
+    <delete id="deleteByCommodityId">
+        DELETE FROM image WHERE commodityid = #{commodityid}
+    </delete>
+
+    <!-- 根据商品ID更新图片 -->
+    <update id="updateByCommodityId">
+        UPDATE image SET iname = #{iname}, ipath = #{ipath}
+        WHERE commodityid = #{commodityid}
+    </update>
+
+</mapper>

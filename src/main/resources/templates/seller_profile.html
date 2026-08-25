@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<!-- 商家个人主页：展示商家信息、店铺数据、商品管理入口 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商家中心 - E购商城</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        body { background: #f5f5f5; }
+        .seller-header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 40px 0; }
+        .avatar { width: 120px; height: 120px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 56px; color: #f5576c; margin: 0 auto; border: 4px solid rgba(255,255,255,0.3); }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .stat-number { font-size: 36px; font-weight: bold; color: #f5576c; }
+        .stat-label { color: #666; margin-top: 8px; font-size: 14px; }
+        .quick-action { background: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; }
+        .action-btn { padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; transition: all 0.3s; background: #f8f9fa; }
+        .action-btn:hover { background: #f5576c; color: white; transform: translateY(-3px); }
+        .action-icon { font-size: 40px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/index">E购商城</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link" href="/index">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/com">商品管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/board">买家留言</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/profile" th:text="'欢迎，' + ${user.name}"></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">注销</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 商家主页头部 -->
+    <div class="seller-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    <div class="avatar" th:text="${user.name.substring(0,1)}">商</div>
+                </div>
+                <div class="col-md-10">
+                    <h2 th:text="${supplier != null ? supplier.sname : user.name}">商家名称</h2>
+                    <p class="mb-1">账号：<span th:text="${user.account}">account</span></p>
+                    <p class="mb-1">手机：<span th:text="${user.phone}">phone</span></p>
+                    <p class="mb-0">注册时间：<span th:text="${#dates.format(user.createtime, 'yyyy-MM-dd')}">date</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- 统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${productCount}">0</div>
+                    <div class="stat-label">在售商品</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${orderCount}">0</div>
+                    <div class="stat-label">总订单数</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${totalSales}">0</div>
+                    <div class="stat-label">总销量（件）</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${user.onlineyes == 1} ? '在线' : '离线'">状态</div>
+                    <div class="stat-label">当前状态</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷操作 -->
+        <div class="quick-action">
+            <h4 class="mb-4">快捷操作</h4>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="action-btn" onclick="window.location.href='/com'">
+                        <div class="action-icon">📦</div>
+                        <div>商品管理</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="action-btn" onclick="window.location.href='/board'">
+                        <div class="action-icon">💬</div>
+                        <div>买家留言</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="action-btn" onclick="window.location.href='/dashboard'">
+                        <div class="action-icon">📊</div>
+                        <div>数据仪表盘</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="action-btn" onclick="window.location.href='/index'">
+                        <div class="action-icon">🏠</div>
+                        <div>商城首页</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab切换 -->
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#products">我的商品</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#settings">账号设置</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- 商品列表 -->
+            <div class="tab-pane fade show active" id="products">
+                <div th:if="${commodities.size() == 0}" class="text-center text-muted py-5" style="background:white; border-radius:8px;">
+                    <p>暂无商品，快去<a href="/com">添加商品</a>吧</p>
+                </div>
+                <div class="row">
+                    <div class="col-md-3" th:each="com : ${commodities}">
+                        <div style="background:white; padding:15px; border-radius:8px; margin-bottom:15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+                            <img th:if="${com.ipath != null}" th:src="${com.ipath}" style="width:100%; height:150px; object-fit:cover; border-radius:4px;" alt="商品图片">
+                            <h6 class="mt-2" th:text="${com.cname}">商品名称</h6>
+                            <p class="text-danger mb-1">￥<span th:text="${com.cprice}">0.00</span></p>
+                            <p class="text-muted mb-1" style="font-size:12px;">库存：<span th:text="${com.cnum}">0</span></p>
+                            <span th:if="${com.cstatus == 1}" class="badge badge-success">在售</span>
+                            <span th:if="${com.cstatus == 0}" class="badge badge-secondary">停售</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 账号设置 -->
+            <div class="tab-pane fade" id="settings">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">修改个人信息</h5>
+                        <form id="profileForm">
+                            <div class="form-group">
+                                <label>姓名</label>
+                                <input type="text" class="form-control" id="profileName" th:value="${user.name}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>性别</label>
+                                <select class="form-control" id="profileSex">
+                                    <option value="男" th:selected="${user.sex == '男'}">男</option>
+                                    <option value="女" th:selected="${user.sex == '女'}">女</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>手机号</label>
+                                <input type="text" class="form-control" id="profilePhone" th:value="${user.phone}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script>
+        // 修改个人信息
+        $('#profileForm').submit(function(e) {
+            e.preventDefault();
+            var name = $('#profileName').val();
+            var sex = $('#profileSex').val();
+            var phone = $('#profilePhone').val();
+            $.post('/updateProfile', { name: name, sex: sex, phone: phone }, function(res) {
+                if (res.code === 200) {
+                    alert(res.msg);
+                    location.reload();
+                } else {
+                    alert(res.msg);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

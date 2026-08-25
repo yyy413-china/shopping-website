@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 收藏Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.FavoriteMapper">
+
+    <resultMap id="BaseResultMap" type="com.egou.domain.Favorite">
+        <id column="id" property="id"/>
+        <result column="userid" property="userid"/>
+        <result column="commodityid" property="commodityid"/>
+        <result column="createtime" property="createtime"/>
+        <result column="cname" property="cname"/>
+        <result column="cprice" property="cprice"/>
+        <result column="ipath" property="ipath"/>
+        <result column="cstatus" property="cstatus"/>
+    </resultMap>
+
+    <!-- 添加收藏 -->
+    <insert id="insert">
+        INSERT INTO favorite (userid, commodityid) VALUES (#{userid}, #{commodityid})
+    </insert>
+
+    <!-- 取消收藏 -->
+    <delete id="deleteByUserAndCommodity">
+        DELETE FROM favorite WHERE userid = #{userid} AND commodityid = #{commodityid}
+    </delete>
+
+    <!-- 查询用户是否已收藏某商品 -->
+    <select id="findByUserAndCommodity" resultMap="BaseResultMap">
+        SELECT * FROM favorite WHERE userid = #{userid} AND commodityid = #{commodityid}
+    </select>
+
+    <!-- 查询用户的全部收藏（联表查询商品信息） -->
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT f.*, c.cname, c.cprice, c.cstatus, i.ipath
+        FROM favorite f
+        LEFT JOIN commodity c ON f.commodityid = c.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE f.userid = #{userid}
+        ORDER BY f.createtime DESC
+    </select>
+
+    <!-- 统计用户收藏数量 -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM favorite WHERE userid = #{userid}
+    </select>
+
+</mapper>

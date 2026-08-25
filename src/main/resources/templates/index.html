@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<!-- E购商城买家首页：搜索栏、Banner、分类导航、推荐商品、猜你喜欢 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E购商城 - 首页</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        /* 顶部工具栏 */
+        .top-bar { background: #f5f5f5; padding: 8px 0; font-size: 12px; color: #666; }
+        .top-bar a { color: #666; text-decoration: none; margin: 0 10px; }
+        .top-bar a:hover { color: #e74c3c; }
+        
+        /* 主导航栏 */
+        .main-nav { background: white; padding: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .logo { font-size: 32px; font-weight: bold; color: #e74c3c; }
+        
+        /* 搜索栏 - 大气设计 */
+        .search-container { 
+            position: relative;
+            max-width: 700px; 
+            margin: 0 auto;
+        }
+        .search-box { 
+            display: flex; 
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+        }
+        .search-box:hover {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            transform: translateY(-2px);
+        }
+        .search-box input { 
+            flex: 1; 
+            padding: 15px 25px; 
+            border: none; 
+            border-radius: 50px 0 0 50px; 
+            outline: none; 
+            font-size: 16px;
+            background: white;
+        }
+        .search-box input::placeholder {
+            color: #999;
+        }
+        .search-box button { 
+            padding: 15px 35px; 
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white; 
+            border: none; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .search-box button:hover { 
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+            transform: scale(1.05);
+        }
+        .search-icon {
+            position: absolute;
+            right: 120px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 20px;
+        }
+        
+        /* 分类导航 */
+        .category-nav { background: white; padding: 15px 0; border-bottom: 1px solid #eee; }
+        .category-item { display: inline-block; padding: 8px 20px; margin: 0 5px; border-radius: 20px; cursor: pointer; transition: all 0.3s; }
+        .category-item:hover, .category-item.active { background: #e74c3c; color: white; }
+        
+        /* Banner轮播 */
+        .banner { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 0; text-align: center; border-radius: 12px; margin: 20px 0; }
+        .banner h1 { font-size: 48px; margin-bottom: 20px; }
+        .banner p { font-size: 20px; opacity: 0.9; }
+        
+        /* 商品卡片 */
+        .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; cursor: pointer; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        .product-card img { width: 100%; height: 220px; object-fit: cover; }
+        .product-info { padding: 15px; }
+        .product-name { font-size: 16px; font-weight: bold; margin-bottom: 10px; height: 48px; overflow: hidden; }
+        .product-price { color: #e74c3c; font-size: 24px; font-weight: bold; }
+        .product-price small { font-size: 14px; }
+        .product-sales { color: #999; font-size: 12px; margin-top: 5px; }
+        
+        /* 分页 */
+        .pagination { justify-content: center; margin: 40px 0; }
+        .pagination .page-link { color: #e74c3c; }
+        .pagination .active .page-link { background: #e74c3c; border-color: #e74c3c; }
+        
+        /* 欢迎语 */
+        .welcome-msg { color: #27ae60; font-weight: bold; cursor: pointer; }
+        .welcome-msg:hover { text-decoration: underline; }
+        
+        /* 快捷入口 */
+        .quick-entry { background: white; padding: 30px; border-radius: 12px; margin: 20px 0; }
+        .quick-item { text-align: center; padding: 20px; cursor: pointer; transition: all 0.3s; }
+        .quick-item:hover { transform: scale(1.05); }
+        .quick-icon { font-size: 48px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <!-- 顶部工具栏 -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <span>E购商城，品质生活从这里开始</span>
+                </div>
+                <div class="col-md-6 text-right">
+                    <a href="/index">首页</a>
+                    <a th:if="${user == null}" href="#" onclick="showLoginModal(); return false;">登录</a>
+                    <a th:if="${user == null}" href="/register">注册</a>
+                    <a th:if="${user != null and user.role == 0}" href="/cart">购物车</a>
+                    <a th:if="${user != null and user.role == 0}" href="#" onclick="showMsgModal(); return false;" style="color:#e67e22;">💬 留言</a>
+                    <a th:if="${user != null}" href="/profile" class="welcome-msg" th:text="'你好，' + ${user.name}"></a>
+                    <a th:if="${user != null}" href="/logout">注销</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主导航栏 -->
+    <div class="main-nav">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <a href="/index" class="logo">E购商城</a>
+                </div>
+                <div class="col-md-6">
+                    <!-- 搜索商品（通过表单提交实现搜索） -->
+                    <div class="search-container">
+                        <form id="searchForm" action="/index" method="get">
+                            <div class="search-box">
+                                <input type="text" name="keyword" id="searchInput" placeholder="🔍 搜索你想要的商品..." th:value="${keyword}">
+                                <button type="submit">搜索</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-3 text-right">
+                    <a th:if="${user != null and user.role == 0}" href="/cart" class="btn btn-outline-danger">
+                        购物车
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分类导航 -->
+    <div class="category-nav">
+        <div class="container text-center">
+            <a href="/index" class="category-item" th:classappend="${categoryid == null} ? 'active' : ''">全部</a>
+            <a th:each="cat : ${categories}" th:href="@{/index(categoryid=${cat.id})}"
+               class="category-item"
+               th:classappend="${categoryid != null and categoryid == cat.id} ? 'active' : ''"
+               th:text="${cat.cname}"></a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 搜索模式下隐藏Banner和快捷入口，直接展示结果 -->
+        <div th:if="${keyword == null}">
+            <!-- Banner -->
+            <div class="banner">
+                <h1>618狂欢节</h1>
+                <p>爆款购物清单，跟买不出错！官方立减商品8.5折起</p>
+            </div>
+
+            <!-- 快捷入口 -->
+            <div class="quick-entry">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="quick-item">
+                            <div class="quick-icon">🔥</div>
+                            <div>热销爆款</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="quick-item">
+                            <div class="quick-icon">💰</div>
+                            <div>限时特价</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="quick-item">
+                            <div class="quick-icon">🎁</div>
+                            <div>新品首发</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="quick-item">
+                            <div class="quick-icon">⭐</div>
+                            <div>品质优选</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索结果提示 -->
+        <div th:if="${keyword != null}" class="mt-4">
+            <!-- 未登录提示 -->
+            <div th:if="${needLogin}" class="alert alert-warning" role="alert" style="border-radius: 12px; padding: 20px;">
+                <strong>搜索功能需要登录</strong>
+                <p class="mb-2 mt-2">您搜索的关键词：<strong th:text="${keyword}"></strong></p>
+                <p class="mb-0">请先 <a href="#" onclick="showLoginModal(); return false;" style="color: #e74c3c; font-weight: bold;">登录</a> 后使用搜索功能</p>
+            </div>
+            <!-- 已登录搜索结果提示 -->
+            <div th:if="${!needLogin}" class="alert alert-info" role="alert" style="border-radius: 12px; padding: 20px;">
+                搜索关键词：<strong th:text="${keyword}"></strong>，
+                共找到 <strong th:text="${pageInfo.total}">0</strong> 件商品
+                <a href="/index" class="btn btn-sm btn-outline-secondary ml-3">清除搜索</a>
+            </div>
+        </div>
+
+        <!-- 无搜索结果提示 -->
+        <div th:if="${keyword != null and !needLogin and pageInfo.list.size() == 0}" class="text-center text-muted py-5">
+            <h4>未找到与"<span th:text="${keyword}"></span>"相关的商品</h4>
+            <p>试试其他关键词吧</p>
+        </div>
+
+        <!-- 商品列表 -->
+        <div class="row" th:if="${(keyword == null) or (!needLogin and pageInfo.list.size() > 0)}">
+            <div class="col-md-3" th:each="commodity : ${pageInfo.list}">
+                <div class="product-card" th:onclick="'viewProduct(' + ${commodity.id} + ')'">
+                    <img th:if="${commodity.ipath != null}" th:src="${commodity.ipath}" alt="商品图片">
+                    <img th:if="${commodity.ipath == null}" src="/images/no-image.svg" alt="暂无图片">
+                    <div class="product-info">
+                        <div class="product-name" th:text="${commodity.cname}">商品名称</div>
+                        <div class="product-price">
+                            <small>￥</small><span th:text="${commodity.cprice}">0.00</span>
+                        </div>
+                        <div class="product-sales">库存：<span th:text="${commodity.cnum}">0</span>件</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <nav th:if="${pageInfo.pages > 1}">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${pageInfo.pageNum == 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/index(categoryid=${categoryid}, keyword=${keyword}, pageNum=1)}">首页</a>
+                </li>
+                <li class="page-item" th:classappend="${!pageInfo.hasPreviousPage} ? 'disabled'">
+                    <a class="page-link" th:href="@{/index(categoryid=${categoryid}, keyword=${keyword}, pageNum=${pageInfo.pageNum - 1})}">上一页</a>
+                </li>
+                <li class="page-item active">
+                    <span class="page-link" th:text="${pageInfo.pageNum} + '/' + ${pageInfo.pages}"></span>
+                </li>
+                <li class="page-item" th:classappend="${!pageInfo.hasNextPage} ? 'disabled'">
+                    <a class="page-link" th:href="@{/index(categoryid=${categoryid}, keyword=${keyword}, pageNum=${pageInfo.pageNum + 1})}">下一页</a>
+                </li>
+                <li class="page-item" th:classappend="${pageInfo.pageNum == pageInfo.pages} ? 'disabled'">
+                    <a class="page-link" th:href="@{/index(categoryid=${categoryid}, keyword=${keyword}, pageNum=${pageInfo.pages})}">尾页</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- 底部 -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-2">&copy; 2024 E购商城 版权所有</p>
+            <p class="mb-0" style="font-size: 12px; opacity: 0.7;">品质生活，从这里开始</p>
+        </div>
+    </footer>
+
+    <!-- 登录弹窗 -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">用户登录</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label>账号</label>
+                            <input type="text" class="form-control" id="loginAccount" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-block">登录</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 买家留言弹窗 -->
+    <div class="modal fade" id="msgModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 12px 12px 0 0;">
+                    <h5 class="modal-title">💬 给商家留言</h5>
+                    <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p style="color: #666; font-size: 14px;">您的留言将通过消息队列发送给商家，商家会在留言板中查看。</p>
+                    <div class="form-group">
+                        <label style="font-weight: bold;">留言内容</label>
+                        <textarea class="form-control" id="msgContent" rows="4" placeholder="请输入您想对商家说的话..." style="border-radius: 8px; border: 2px solid #eee; padding: 12px;"></textarea>
+                    </div>
+                    <div id="msgResult" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="sendMsg()" style="border-radius: 20px; padding: 8px 30px;">发送留言</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script>
+        // 显示登录弹窗
+        function showLoginModal() {
+            $('#loginModal').modal('show');
+        }
+
+        // 登录表单提交
+        $('#loginForm').submit(function(e) {
+            e.preventDefault();
+            var account = $('#loginAccount').val();
+            var password = $('#loginPassword').val();
+            $.post('/check', { account: account, password: password }, function(res) {
+                if (res.code === 200) {
+                    alert(res.msg);
+                    location.reload();
+                } else {
+                    alert(res.msg);
+                }
+            });
+        });
+
+        // 查看商品详情
+        function viewProduct(commodityid) {
+            window.location.href = '/product/' + commodityid;
+        }
+
+        // 搜索表单提交前检查登录状态
+        $('#searchForm').submit(function(e) {
+            var keyword = $('#searchInput').val().trim();
+            if (!keyword) {
+                e.preventDefault();
+                return false;
+            }
+            // 如果未登录，弹出登录框
+            var isLoggedIn = [[${user != null}]];
+            if (!isLoggedIn) {
+                e.preventDefault();
+                showLoginModal();
+                return false;
+            }
+        });
+
+        // 显示留言弹窗
+        function showMsgModal() {
+            var isLoggedIn = [[${user != null}]];
+            if (!isLoggedIn) {
+                showLoginModal();
+                return;
+            }
+            $('#msgResult').hide();
+            $('#msgContent').val('');
+            $('#msgModal').modal('show');
+        }
+
+        // 发送留言（买家=消息生产者，通过RabbitMQ异步发送）
+        function sendMsg() {
+            var content = $('#msgContent').val().trim();
+            if (!content) {
+                $('#msgResult').html('<div class="alert alert-warning">请输入留言内容</div>').show();
+                return;
+            }
+            $.post('/sendMsg', { content: content }, function(res) {
+                if (res.code === 200) {
+                    $('#msgResult').html('<div class="alert alert-success">留言发送成功！商家会在留言板中查看。</div>').show();
+                    $('#msgContent').val('');
+                    setTimeout(function() { $('#msgModal').modal('hide'); }, 1500);
+                } else {
+                    $('#msgResult').html('<div class="alert alert-danger">' + res.msg + '</div>').show();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

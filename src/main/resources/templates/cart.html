@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!-- E购商城购物车页面：买家可查看未结算购物车、修改数量、删除商品、结算，以及查看已结算订单 -->
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E购商城 - 购物车</title>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        /* 商品缩略图样式 */
+        .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏：买家专用导航 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/index" style="font-weight:bold;color:#e74c3c!important;font-size:24px;">E购商城</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link" href="/index">首页</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="/cart">购物车</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <!-- 显示当前登录买家欢迎语 -->
+                    <li class="nav-item"><a class="nav-link" href="/profile" style="color:#27ae60;font-weight:bold;" th:text="${user != null ? '欢迎，' + user.name : ''}"></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">注销</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 未结算购物车列表 -->
+        <h4>我的购物车</h4>
+        <table class="table table-bordered table-hover mt-3">
+            <thead class="thead-dark">
+                <tr><th>图片</th><th>商品名称</th><th>价格</th><th>数量</th><th>小计</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+                <!-- 遍历未结算购物车项 -->
+                <tr th:each="cart : ${unpaidList}">
+                    <!-- 商品缩略图 -->
+                    <td><img class="product-img" th:if="${cart.imagePath != null}" th:src="${cart.imagePath}" alt="商品图"></td>
+                    <td th:text="${cart.commodityName}"></td>
+                    <td>￥<span th:text="${cart.commodityPrice}"></span></td>
+                    <!-- 数量修改输入框，修改后触发changeNum函数 -->
+                    <td>
+                        <input type="number" class="form-control" style="width:80px;display:inline-block;"
+                               th:value="${cart.cnum}" min="1"
+                               th:onchange="'changeNum(' + ${cart.id} + ', this.value)'">
+                    </td>
+                    <!-- 小计 = 单价 × 数量 -->
+                    <td>￥<span th:text="${cart.commodityPrice * cart.cnum}"></span></td>
+                    <!-- 删除按钮 -->
+                    <td><a class="btn btn-danger btn-sm" th:href="@{/changeconfirm(id=${cart.id})}" onclick="return confirm('确认删除？')">删除</a></td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- 结算按钮（购物车非空时显示） -->
+        <button class="btn btn-danger" onclick="doPay()" th:if="${unpaidList != null and !unpaidList.isEmpty()}">结算</button>
+
+        <!-- 已结算订单列表 -->
+        <h4 class="mt-5">我的订单</h4>
+        <table class="table table-bordered table-hover mt-3">
+            <thead class="thead-dark">
+                <tr><th>订单号</th><th>图片</th><th>商品名称</th><th>价格</th><th>数量</th></tr>
+            </thead>
+            <tbody>
+                <!-- 遍历已结算订单项 -->
+                <tr th:each="order : ${paidList}">
+                    <td th:text="${order.orderNo}"></td>
+                    <!-- 订单商品缩略图 -->
+                    <td><img class="product-img" th:if="${order.imagePath != null}" th:src="${order.imagePath}" alt="商品图"></td>
+                    <td th:text="${order.commodityName}"></td>
+                    <td>￥<span th:text="${order.commodityPrice}"></span></td>
+                    <td th:text="${order.cnum}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 底部版权信息 -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p class="mb-0">&copy; 2024 E购商城 版权所有</p>
+    </footer>
+
+    <!-- 引入jQuery -->
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script>
+        // 修改购物车商品数量：发送POST请求更新数量，成功后刷新页面
+        function changeNum(id, cnum) {
+            if (cnum < 1) { alert('数量不能小于1'); window.location.reload(); return; }
+            $.post('/changecnum', { id: id, cnum: cnum }, function(res) {
+                if (res.code === 200) { window.location.reload(); }
+                else { alert(res.msg); }
+            });
+        }
+        // 订单结算：确认后发送POST请求进行结算，成功后刷新页面
+        function doPay() {
+            if (!confirm('确认结算？')) return;
+            $.post('/pay', function(res) {
+                alert(res.msg);
+                if (res.code === 200) { window.location.reload(); }
+            });
+        }
+    </script>
+</body>
+</html>

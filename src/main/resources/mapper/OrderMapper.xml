@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 订单Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.OrderMapper">
+
+    <resultMap id="BaseResultMap" type="com.egou.domain.Order">
+        <id column="id" property="id"/>
+        <result column="orderno" property="orderno"/>
+        <result column="userid" property="userid"/>
+        <result column="totalprice" property="totalprice"/>
+        <result column="ostatus" property="ostatus"/>
+        <result column="createtime" property="createtime"/>
+        <result column="userName" property="userName"/>
+    </resultMap>
+
+    <!-- 新增订单 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `order` (orderno, userid, totalprice, ostatus)
+        VALUES (#{orderno}, #{userid}, #{totalprice}, #{ostatus})
+    </insert>
+
+    <!-- 根据ID查询订单 -->
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT o.*, u.name AS userName
+        FROM `order` o
+        LEFT JOIN user u ON o.userid = u.id
+        WHERE o.id = #{id}
+    </select>
+
+    <!-- 根据订单编号查询订单 -->
+    <select id="findByOrderNo" resultMap="BaseResultMap">
+        SELECT o.*, u.name AS userName
+        FROM `order` o
+        LEFT JOIN user u ON o.userid = u.id
+        WHERE o.orderno = #{orderno}
+    </select>
+
+    <!-- 根据用户ID查询全部订单 -->
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT o.*, u.name AS userName
+        FROM `order` o
+        LEFT JOIN user u ON o.userid = u.id
+        WHERE o.userid = #{userid}
+        ORDER BY o.createtime DESC
+    </select>
+
+    <!-- 统计用户订单数量 -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM `order` WHERE userid = #{userid}
+    </select>
+
+</mapper>

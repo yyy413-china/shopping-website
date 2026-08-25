@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 用户Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.UserMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.egou.domain.User">
+        <id column="id" property="id"/>
+        <result column="account" property="account"/>
+        <result column="password" property="password"/>
+        <result column="name" property="name"/>
+        <result column="sex" property="sex"/>
+        <result column="idcard" property="idcard"/>
+        <result column="phone" property="phone"/>
+        <result column="role" property="role"/>
+        <result column="onlineyes" property="onlineyes"/>
+        <result column="logintime" property="logintime"/>
+        <result column="createtime" property="createtime"/>
+    </resultMap>
+
+    <!-- 根据账号查询用户 -->
+    <select id="findByAccount" resultMap="BaseResultMap">
+        SELECT * FROM user WHERE account = #{account}
+    </select>
+
+    <!-- 根据ID查询用户 -->
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+
+    <!-- 新增用户 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (account, password, name, sex, idcard, phone, role, onlineyes)
+        VALUES (#{account}, #{password}, #{name}, #{sex}, #{idcard}, #{phone}, #{role}, #{onlineyes})
+    </insert>
+
+    <!-- 更新用户在线状态 -->
+    <update id="updateOnlineStatus">
+        UPDATE user SET onlineyes = #{onlineyes} WHERE id = #{id}
+    </update>
+
+    <!-- 更新用户最后登录时间 -->
+    <update id="updateLoginTime">
+        UPDATE user SET logintime = NOW() WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 商品评价Mapper XML映射文件 -->
+<mapper namespace="com.egou.mapper.ReviewMapper">
+
+    <resultMap id="BaseResultMap" type="com.egou.domain.Review">
+        <id column="id" property="id"/>
+        <result column="userid" property="userid"/>
+        <result column="commodityid" property="commodityid"/>
+        <result column="content" property="content"/>
+        <result column="rating" property="rating"/>
+        <result column="createtime" property="createtime"/>
+        <result column="userName" property="userName"/>
+        <result column="commodityName" property="commodityName"/>
+        <result column="ipath" property="ipath"/>
+    </resultMap>
+
+    <!-- 添加评价 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO review (userid, commodityid, content, rating)
+        VALUES (#{userid}, #{commodityid}, #{content}, #{rating})
+    </insert>
+
+    <!-- 查询某商品的全部评价 -->
+    <select id="findByCommodityId" resultMap="BaseResultMap">
+        SELECT r.*, u.name AS userName, c.cname AS commodityName, i.ipath
+        FROM review r
+        LEFT JOIN user u ON r.userid = u.id
+        LEFT JOIN commodity c ON r.commodityid = c.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE r.commodityid = #{commodityid}
+        ORDER BY r.createtime DESC
+    </select>
+
+    <!-- 查询某用户的全部评价 -->
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT r.*, u.name AS userName, c.cname AS commodityName, i.ipath
+        FROM review r
+        LEFT JOIN user u ON r.userid = u.id
+        LEFT JOIN commodity c ON r.commodityid = c.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE r.userid = #{userid}
+        ORDER BY r.createtime DESC
+    </select>
+
+    <!-- 查询某用户是否已评价某商品 -->
+    <select id="findByUserAndCommodity" resultMap="BaseResultMap">
+        SELECT * FROM review WHERE userid = #{userid} AND commodityid = #{commodityid}
+    </select>
+
+    <!-- 统计某商品的平均评分 -->
+    <select id="avgRatingByCommodityId" resultType="double">
+        SELECT IFNULL(AVG(rating), 0) FROM review WHERE commodityid = #{commodityid}
+    </select>
+
+    <!-- 统计某商品的评价数量 -->
+    <select id="countByCommodityId" resultType="int">
+        SELECT COUNT(*) FROM review WHERE commodityid = #{commodityid}
+    </select>
+
+    <!-- 查询商家所有商品的评价 -->
+    <select id="findBySupplierId" resultMap="BaseResultMap">
+        SELECT r.*, u.name AS userName, c.cname AS commodityName, i.ipath
+        FROM review r
+        LEFT JOIN user u ON r.userid = u.id
+        LEFT JOIN commodity c ON r.commodityid = c.id
+        LEFT JOIN image i ON c.id = i.commodityid
+        WHERE c.supplierid = #{supplierid}
+        ORDER BY r.createtime DESC
+    </select>
+
+</mapper>

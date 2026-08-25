@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- 403权限拦截页面：当用户访问无权限的资源时显示此页面 -->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - 暂无访问权限</title>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        /* 403页面容器居中 */
+        .forbidden-container { text-align: center; margin-top: 150px; }
+        /* 403大号红色数字 */
+        .forbidden-container h1 { font-size: 100px; color: #e74c3c; }
+        /* 提示文字灰色 */
+        .forbidden-container p { font-size: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <!-- 403提示内容 -->
+    <div class="forbidden-container">
+        <h1>403</h1>
+        <p>暂无访问权限</p>
+        <!-- 返回首页按钮 -->
+        <a href="/index" class="btn btn-danger mt-3">返回首页</a>
+    </div>
+</body>
+</html>
